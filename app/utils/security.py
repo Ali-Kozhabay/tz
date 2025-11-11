@@ -37,15 +37,17 @@ def _create_token(subject: str, ttl_seconds: int, token_type: str, **claims: Any
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(seconds=ttl_seconds)).timestamp()),
     }
+    if claims:
+        payload.update(claims)
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_alg)
 
 
 def create_access_token(user_id: int, role: str) -> str:
-    return _create_token(str(user_id), settings.access_token_ttl, "access")
+    return _create_token(str(user_id), settings.access_token_ttl, "access", role=role)
 
 
 def create_refresh_token(user_id: int, role: str) -> str:
-    return _create_token(str(user_id), settings.refresh_token_ttl, "refresh")
+    return _create_token(str(user_id), settings.refresh_token_ttl, "refresh", role=role)
 
 
 def decode_token(token: str) -> TokenPayload:
