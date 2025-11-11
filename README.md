@@ -87,10 +87,10 @@ Sample tests cover hashing/JWT primitives and storage signing TTL. Extend with i
 ### Useful curl
 ```bash
 # Register
-curl -X POST http://localhost:8000/auth/register -H "Content-Type: application/json" \
+curl -X POST http://localhost:8001/auth/register -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"Secret123"}'
 
 # List courses
-curl http://localhost:8000/courses
+curl http://localhost:8001/courses
 ```
 
