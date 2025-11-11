@@ -26,7 +26,7 @@ Async FastAPI backend that covers auth, role-based access, courses/progress API,
    ```
 4. **Run the API**
    ```bash
-   poetry run uvicorn app:app --reload
+   docker-compose up -d
    ```
 5. **Run background notifications worker (optional)**
    ```bash
