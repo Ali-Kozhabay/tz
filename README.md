@@ -32,6 +32,10 @@ Async FastAPI backend that covers auth, role-based access, courses/progress API,
    ```bash
    poetry run rq worker notifications
    ```
+6. **For Documentation**
+    ```bash
+   http://127.0.0.1:8001/docs
+   ```
 
 ### Environment
 Key variables (see `.env.example`). The app defaults to PostgreSQL via `postgresql+asyncpg://` DSNs:
