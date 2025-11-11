@@ -1,0 +1,5 @@
+Your invite has been redeemed successfully.
+
+Role granted: {{ role }}
+
+Enjoy the member-only courses!

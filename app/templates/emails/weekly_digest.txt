@@ -1,0 +1,5 @@
+Weekly digest:
+
+{{ summary }}
+
+See you soon!

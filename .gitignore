@@ -1,0 +1,18 @@
+# Python / Poetry
+__pycache__/
+*.py[cod]
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+
+
+# Environment files
+.env
+.env.*
+
+
+
+
+

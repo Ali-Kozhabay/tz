@@ -1,0 +1,5 @@
+Hi {{ name }},
+
+Welcome to our learning platform! Your locale is set to {{ locale }}.
+
+Visit {{ base_url }} to explore the first courses.

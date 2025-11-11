@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Realtime Chat Tester</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+    #container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; }
+    label { display: block; margin-bottom: 4px; font-weight: 600; }
+    input, textarea, select { width: 100%; padding: 8px; margin-bottom: 12px; border-radius: 4px; border: 1px solid #ccc; }
+    button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+    #messages { border: 1px solid #ddd; border-radius: 4px; padding: 10px; height: 300px; overflow-y: auto; background:#fafafa; }
+    .msg { margin-bottom: 8px; font-size: 0.9rem; }
+    .msg.system { color: #888; }
+    .msg.error { color: #d91c1c; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2>Realtime Chat Tester</h2>
+    <div>
+      <label for="wsUrl">WebSocket URL</label>
+      <input id="wsUrl" type="text" value="ws://localhost:8000/ws/channels/hq" />
+
+      <label for="accessToken">Access JWT (for `Authorization: Bearer`)</label>
+      <input id="accessToken" type="text" placeholder="ey..." />
+
+      <label for="channel">Channel slug</label>
+      <input id="channel" type="text" value="hq" />
+
+      <button id="connectBtn">Connect</button>
+      <button id="disconnectBtn" disabled>Disconnect</button>
+    </div>
+
+    <hr />
+    <div>
+      <label for="messageText">Message text</label>
+      <textarea id="messageText" rows="3"></textarea>
+
+      <label for="parentId">Parent message ID (optional)</label>
+      <input id="parentId" type="text" />
+
+      <button id="sendBtn" disabled>Send message</button>
+    </div>
+
+    <hr />
+    <div id="messages"></div>
+  </div>
+
+  <script>
+    const connectBtn = document.getElementById('connectBtn');
+    const disconnectBtn = document.getElementById('disconnectBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const messageBox = document.getElementById('messages');
+    const messageText = document.getElementById('messageText');
+    const parentIdInput = document.getElementById('parentId');
+    const wsUrlInput = document.getElementById('wsUrl');
+    const tokenInput = document.getElementById('accessToken');
+
+    let socket;
+
+    const log = (text, type = 'system') => {
+      const div = document.createElement('div');
+      div.className = `msg ${type}`;
+      div.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+      messageBox.appendChild(div);
+      messageBox.scrollTop = messageBox.scrollHeight;
+    };
+
+    const connect = () => {
+      const baseUrl = wsUrlInput.value.trim();
+      const token = tokenInput.value.trim();
+      if (!baseUrl) {
+        alert('Provide WebSocket URL');
+        return;
+      }
+      let url = baseUrl;
+      if (token) {
+        const separator = baseUrl.includes('?') ? '&' : '?';
+        url = `${baseUrl}${separator}token=${encodeURIComponent(token)}`;
+      }
+      socket = new WebSocket(url);
+      socket.onopen = () => {
+        log('Connected', 'system');
+        sendBtn.disabled = false;
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+      };
+      socket.onmessage = (event) => {
+        log(`RX: ${event.data}`, 'message');
+      };
+      socket.onerror = (event) => {
+        const msg = event?.message || event?.reason || 'Unknown error';
+        log(`Error: ${msg}`, 'error');
+      };
+      socket.onclose = (event) => {
+        log(`Disconnected (code ${event.code}${event.reason ? `, reason: ${event.reason}` : ''})`, 'system');
+        sendBtn.disabled = true;
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+      };
+    };
+
+    connectBtn.addEventListener('click', () => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+      connect();
+    });
+
+    disconnectBtn.addEventListener('click', () => {
+      if (socket) {
+        socket.close();
+      }
+    });
+
+    sendBtn.addEventListener('click', () => {
+      if (!socket || socket.readyState !== WebSocket.OPEN) return;
+      const text = messageText.value.trim();
+      if (!text) return alert('Message cannot be empty');
+      const parentId = parentIdInput.value.trim();
+      const payload = {
+        type: 'message.create',
+        payload: {
+          text,
+          parent_id: parentId ? Number(parentId) : null,
+        },
+      };
+      socket.send(JSON.stringify(payload));
+      log(`TX: ${JSON.stringify(payload)}`, 'system');
+    });
+  </script>
+</body>
+</html>
