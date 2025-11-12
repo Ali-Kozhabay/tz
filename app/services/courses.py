@@ -8,7 +8,15 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from app.models import ContentVisibility, Course, Lesson, LessonStatus, Progress, User, UserRole
+from app.models import (
+    ContentVisibility,
+    Course,
+    Lesson,
+    LessonStatus,
+    Progress,
+    User,
+    UserRole,
+)
 from app.schemas import CourseCreate, LessonCreate, ProgressMarkRequest
 
 
@@ -37,7 +45,9 @@ class CourseService:
 
         if visibility:
             if visibility not in allowed_visibility:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Visibility denied")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Visibility denied"
+                )
             statement = statement.where(Course.visibility == visibility)
         else:
             statement = statement.where(Course.visibility.in_(allowed_visibility))
@@ -58,19 +68,28 @@ class CourseService:
 
     async def get_course(self, slug: str, role: UserRole) -> Course:
         course = await self.session.scalar(
-            select(Course).where(Course.slug == slug).options(joinedload(Course.lessons))
+            select(Course)
+            .where(Course.slug == slug)
+            .options(joinedload(Course.lessons))
         )
         if not course:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
-        if course.visibility == ContentVisibility.member and role not in (UserRole.member, UserRole.admin):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Members only")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
+            )
+        if course.visibility == ContentVisibility.member and role not in (
+            UserRole.member,
+            UserRole.admin,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Members only"
+            )
         return course
 
     async def create_course(self, payload: CourseCreate) -> Course:
         existing_course = await self.get_course(payload.course.slug, payload.role)
         if existing_course:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,detail="Course already exists"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Course already exists"
             )
         course = Course(**payload.model_dump())
         self.session.add(course)
@@ -88,16 +107,27 @@ class CourseService:
     async def published_lessons(self, course: Course) -> list[Lesson]:
         return [lesson for lesson in course.lessons if lesson.published]
 
-    async def upsert_progress(self, user: User, payload: ProgressMarkRequest) -> Progress:
+    async def upsert_progress(
+        self, user: User, payload: ProgressMarkRequest
+    ) -> Progress:
         lesson = await self.session.get(Lesson, payload.lesson_id)
         if not lesson:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Lesson not found"
+            )
         course = await self.session.get(Course, lesson.course_id)
-        if course and course.visibility == ContentVisibility.member and user.role not in (
-            UserRole.member,
-            UserRole.admin,
+        if (
+            course
+            and course.visibility == ContentVisibility.member
+            and user.role
+            not in (
+                UserRole.member,
+                UserRole.admin,
+            )
         ):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Members only lesson")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Members only lesson"
+            )
 
         progress = await self.session.scalar(
             select(Progress).where(
@@ -121,7 +151,9 @@ class CourseService:
         await self.session.refresh(progress)
         return progress
 
-    async def load_progress_for_course(self, user: User, course: Course) -> dict[str, Any] | None:
+    async def load_progress_for_course(
+        self, user: User, course: Course
+    ) -> dict[str, Any] | None:
         if not user:
             return None
         lesson_ids = [lesson.id for lesson in course.lessons if lesson.published]

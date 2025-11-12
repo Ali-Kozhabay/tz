@@ -16,7 +16,9 @@ class AuditLog(Base):
     action: Mapped[str] = mapped_column(String(128), nullable=False)
     entity: Mapped[str] = mapped_column(String(128), nullable=False)
     entity_id: Mapped[str] = mapped_column(String(128), nullable=False)
-    meta: Mapped[dict[str, object]] = mapped_column(JSON, default=dict, server_default="{}")
+    meta: Mapped[dict[str, object]] = mapped_column(
+        JSON, default=dict, server_default="{}"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

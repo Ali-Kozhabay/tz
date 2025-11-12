@@ -38,7 +38,9 @@ def _send_email(subject: str, to_email: str, body: str) -> None:
 
 
 def send_welcome_email(email: str, name: str | None, locale: str) -> None:
-    body = _render("welcome.txt", name=name or "friend", locale=locale, base_url=settings.base_url)
+    body = _render(
+        "welcome.txt", name=name or "friend", locale=locale, base_url=settings.base_url
+    )
     _send_email("Welcome to the platform", email, body)
 
 

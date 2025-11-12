@@ -38,6 +38,8 @@ async def login(
 
 
 @router.post("/refresh", response_model=TokenPair)
-async def refresh(payload: RefreshRequest, session: AsyncSession = Depends(get_db_session)):
+async def refresh(
+    payload: RefreshRequest, session: AsyncSession = Depends(get_db_session)
+):
     service = AuthService(session)
     return await service.refresh(payload.refresh)

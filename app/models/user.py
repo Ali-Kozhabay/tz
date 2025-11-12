@@ -3,7 +3,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Index, Integer, JSON, String, func
+from sqlalchemy import (
+    DateTime,
+    Enum as SAEnum,
+    ForeignKey,
+    Index,
+    Integer,
+    JSON,
+    String,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -13,7 +22,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from app.models.invite import Invite
     from app.models.course import Progress
     from app.models.chat import Message
-
 
 
 class User(Base):
@@ -48,6 +56,8 @@ class Profile(Base):
     name: Mapped[str | None] = mapped_column(String(255))
     avatar_url: Mapped[str | None] = mapped_column(String(512))
     locale: Mapped[str] = mapped_column(String(10), nullable=False, default="en")
-    settings: Mapped[dict[str, object]] = mapped_column(JSON, default=dict, server_default="{}")
+    settings: Mapped[dict[str, object]] = mapped_column(
+        JSON, default=dict, server_default="{}"
+    )
 
     user: Mapped[User] = relationship(back_populates="profile")

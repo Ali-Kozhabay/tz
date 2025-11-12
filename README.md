@@ -93,4 +93,3 @@ curl -X POST http://localhost:8001/auth/register -H "Content-Type: application/j
 # List courses
 curl http://localhost:8001/courses
 ```
-

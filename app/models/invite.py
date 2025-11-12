@@ -17,12 +17,18 @@ class Invite(Base):
     __tablename__ = "invites"
 
     code: Mapped[str] = mapped_column(String(64), primary_key=True)
-    role_to_grant: Mapped[UserRole] = mapped_column(SAEnum(UserRole, name="invite_role"), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    role_to_grant: Mapped[UserRole] = mapped_column(
+        SAEnum(UserRole, name="invite_role"), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    used_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    used_by_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     used_by: Mapped["User | None"] = relationship(back_populates="invites")

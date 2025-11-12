@@ -102,7 +102,9 @@ def test_list_courses_returns_expected_payload(monkeypatch, member_user):
     async def optional_user_override():
         return member_user
 
-    monkeypatch.setattr(courses_service.CourseService, "list_courses", fake_list_courses)
+    monkeypatch.setattr(
+        courses_service.CourseService, "list_courses", fake_list_courses
+    )
     client = _build_client({deps_module.get_optional_user: optional_user_override})
 
     response = client.get("/courses?limit=3")
@@ -158,13 +160,17 @@ def test_get_course_includes_lessons_and_progress(monkeypatch, member_user):
     class DummyStorageService:
         def sign(self, payload):
             expires = datetime.now(UTC) + timedelta(minutes=5)
-            return StorageSignResponse(url=f"https://cdn/{payload.key}", expires_at=expires)
+            return StorageSignResponse(
+                url=f"https://cdn/{payload.key}", expires_at=expires
+            )
 
     async def optional_user_override():
         return member_user
 
     monkeypatch.setattr(courses_service.CourseService, "get_course", fake_get_course)
-    monkeypatch.setattr(courses_service.CourseService, "published_lessons", fake_published_lessons)
+    monkeypatch.setattr(
+        courses_service.CourseService, "published_lessons", fake_published_lessons
+    )
     monkeypatch.setattr(
         courses_service.CourseService, "load_progress_for_course", fake_load_progress
     )
@@ -199,7 +205,9 @@ def test_admin_create_course_returns_read_model(monkeypatch):
     async def current_user_override():
         return DummyUser(UserRole.admin)
 
-    monkeypatch.setattr(courses_service.CourseService, "create_course", fake_create_course)
+    monkeypatch.setattr(
+        courses_service.CourseService, "create_course", fake_create_course
+    )
     client = _build_client({deps_module.get_current_user: current_user_override})
 
     response = client.post(

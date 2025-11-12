@@ -10,10 +10,12 @@ from app.services.notifications import enqueue_invite_redeemed
 router = APIRouter(tags=["Invites"])
 
 
-@router.post("/admin/invites", response_model=InviteRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/admin/invites", response_model=InviteRead, status_code=status.HTTP_201_CREATED
+)
 async def create_invite(
     payload: InviteCreateRequest,
-    session:AsyncSession=Depends(get_db_session),
+    session: AsyncSession = Depends(get_db_session),
     user=Depends(require_role(UserRole.admin)),
 ):
     service = InviteService(session)
@@ -24,7 +26,7 @@ async def create_invite(
 @router.post("/invites/redeem", response_model=InviteRead)
 async def redeem_invite(
     payload: InviteRedeemRequest,
-    session:AsyncSession=Depends(get_db_session),
+    session: AsyncSession = Depends(get_db_session),
     user=Depends(get_current_user),
 ):
     service = InviteService(session)

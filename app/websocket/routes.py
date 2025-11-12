@@ -23,19 +23,27 @@ async def _auth_websocket(websocket: WebSocket, session: AsyncSession):
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ", 1)[1]
     if not token:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Missing token")
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Missing token"
+        )
         raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION)
     try:
         payload = decode_token(token)
     except Exception as exc:  # noqa: BLE001
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token"
+        )
         raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION) from exc
     if payload.get("type") != "access":
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token type")
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token type"
+        )
         raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION)
     user = await session.get(User, int(payload["sub"]))
     if not user:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="User not found")
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION, reason="User not found"
+        )
         raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION)
     return user
 
@@ -50,27 +58,37 @@ async def _redis_forward(pubsub, websocket: WebSocket):
         pass
 
 
-async def _handle_event(slug: str, event: dict, chat_service: ChatService, user: User, websocket: WebSocket):
+async def _handle_event(
+    slug: str, event: dict, chat_service: ChatService, user: User, websocket: WebSocket
+):
     event_type = event.get("type")
     payload = event.get("payload", {})
     if event_type == "message.create":
         data = ChatMessagePayload(**payload)
         created = await chat_service.create_message(slug, user, data)
-        await websocket.send_json({"type": "message.ack", "payload": {"id": created["id"]}})
+        await websocket.send_json(
+            {"type": "message.ack", "payload": {"id": created["id"]}}
+        )
     elif event_type == "message.delete":
         message_id = payload.get("id")
         if not message_id:
-            await websocket.send_json({"type": "error", "payload": {"message": "id required"}})
+            await websocket.send_json(
+                {"type": "error", "payload": {"message": "id required"}}
+            )
             return
         await chat_service.delete_message(slug, int(message_id), user)
     elif event_type == "message.pin":
         message_id = payload.get("id")
         if not message_id:
-            await websocket.send_json({"type": "error", "payload": {"message": "id required"}})
+            await websocket.send_json(
+                {"type": "error", "payload": {"message": "id required"}}
+            )
             return
         await chat_service.pin_message(slug, int(message_id), user)
     else:
-        await websocket.send_json({"type": "error", "payload": {"message": "Unknown event"}})
+        await websocket.send_json(
+            {"type": "error", "payload": {"message": "Unknown event"}}
+        )
 
 
 def register_websocket(app: FastAPI) -> None:

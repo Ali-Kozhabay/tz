@@ -48,7 +48,9 @@ class Course(Base):
 
 class Lesson(Base):
     __tablename__ = "lessons"
-    __table_args__ = (UniqueConstraint("course_id", "index", name="uq_lessons_course_idx"),)
+    __table_args__ = (
+        UniqueConstraint("course_id", "index", name="uq_lessons_course_idx"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"))
@@ -56,7 +58,9 @@ class Lesson(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content_url: Mapped[str] = mapped_column(String(512), nullable=False)
     duration_sec: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    published: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    published: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
 
     course: Mapped[Course] = relationship(back_populates="lessons")
     progress_entries: Mapped[list["Progress"]] = relationship(back_populates="lesson")
@@ -64,7 +68,9 @@ class Lesson(Base):
 
 class Progress(Base):
     __tablename__ = "progress"
-    __table_args__ = (UniqueConstraint("user_id", "lesson_id", name="uq_progress_user_lesson"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "lesson_id", name="uq_progress_user_lesson"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
@@ -77,7 +83,10 @@ class Progress(Base):
     )
     percent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
     )
 
     user: Mapped["User"] = relationship(back_populates="progress_entries")

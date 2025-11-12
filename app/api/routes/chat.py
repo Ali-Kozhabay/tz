@@ -9,10 +9,15 @@ from app.schemas.chat import ChatChannelRead
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
-@router.get("/channels", response_model=list[ChatChannelRead], summary="List chat channels")
+@router.get(
+    "/channels", response_model=list[ChatChannelRead], summary="List chat channels"
+)
 async def list_channels(session: AsyncSession = Depends(get_db_session)):
     result = await session.execute(select(Channel.slug, Channel.is_readonly))
-    return [ChatChannelRead(slug=slug, is_readonly=is_readonly) for slug, is_readonly in result.all()]
+    return [
+        ChatChannelRead(slug=slug, is_readonly=is_readonly)
+        for slug, is_readonly in result.all()
+    ]
 
 
 @router.get(
@@ -23,7 +28,8 @@ async def list_channels(session: AsyncSession = Depends(get_db_session)):
         "Explains how to connect to the WebSocket chat API. "
         "Use `ws://host/ws/channels/{slug}` with an access JWT passed either as "
         "`Authorization: Bearer <token>` or via `?token=` query. "
-        "Client messages are JSON with types `message.create`, `message.delete`, `message.pin`."
+        "Client messages are JSON with types `message.create`, "
+        "`message.delete`, `message.pin`."
     ),
 )
 async def chat_docs():
@@ -31,9 +37,16 @@ async def chat_docs():
         "ws_url": "/ws/channels/{slug}",
         "auth": "Authorization: Bearer <access token> or ?token=<token>",
         "events": {
-            "message.create": {"payload": {"text": "your text", "parent_id": "optional"}},
+            "message.create": {
+                "payload": {"text": "your text", "parent_id": "optional"}
+            },
             "message.delete": {"payload": {"id": "message id"}},
             "message.pin": {"payload": {"id": "message id", "note": "admin only"}},
         },
-        "broadcasts": ["message.history", "message.created", "message.deleted", "message.pinned"],
+        "broadcasts": [
+            "message.history",
+            "message.created",
+            "message.deleted",
+            "message.pinned",
+        ],
     }

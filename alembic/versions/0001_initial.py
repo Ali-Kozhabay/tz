@@ -34,17 +34,29 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("password_hash", sa.String(length=255), nullable=False),
         sa.Column("role", user_role, nullable=False, server_default="guest"),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
 
     op.create_table(
         "profiles",
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+        sa.Column(
+            "user_id",
+            sa.Integer(),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            primary_key=True,
+        ),
         sa.Column("name", sa.String(length=255), nullable=True),
         sa.Column("avatar_url", sa.String(length=512), nullable=True),
         sa.Column("locale", sa.String(length=10), nullable=False, server_default="en"),
-        sa.Column("settings", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
+        sa.Column(
+            "settings", sa.JSON(), nullable=False, server_default=sa.text("'{}'")
+        ),
     )
 
     op.create_table(
@@ -52,7 +64,12 @@ def upgrade() -> None:
         sa.Column("code", sa.String(length=64), primary_key=True),
         sa.Column("role_to_grant", invite_role, nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
         sa.Column("used_by_id", sa.Integer(), sa.ForeignKey("users.id")),
         sa.Column("used_at", sa.DateTime(timezone=True)),
     )
@@ -62,10 +79,17 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("title", sa.String(length=255), nullable=False),
         sa.Column("slug", sa.String(length=128), nullable=False),
-        sa.Column("visibility", visibility_enum, nullable=False, server_default="public"),
+        sa.Column(
+            "visibility", visibility_enum, nullable=False, server_default="public"
+        ),
         sa.Column("cover_url", sa.String(length=512)),
         sa.Column("description", sa.Text()),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
         sa.UniqueConstraint("slug"),
     )
 
@@ -73,43 +97,77 @@ def upgrade() -> None:
         "channels",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("slug", sa.String(length=64), nullable=False),
-        sa.Column("is_readonly", sa.Boolean(), nullable=False, server_default=sa.text("false")),
+        sa.Column(
+            "is_readonly", sa.Boolean(), nullable=False, server_default=sa.text("false")
+        ),
     )
     op.create_index("ix_channels_slug", "channels", ["slug"], unique=True)
 
     op.create_table(
         "lessons",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("course_id", sa.Integer(), sa.ForeignKey("courses.id", ondelete="CASCADE")),
+        sa.Column(
+            "course_id", sa.Integer(), sa.ForeignKey("courses.id", ondelete="CASCADE")
+        ),
         sa.Column("index", sa.Integer(), nullable=False),
         sa.Column("title", sa.String(length=255), nullable=False),
         sa.Column("content_url", sa.String(length=512), nullable=False),
         sa.Column("duration_sec", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("published", sa.Boolean(), nullable=False, server_default=sa.text("false")),
+        sa.Column(
+            "published", sa.Boolean(), nullable=False, server_default=sa.text("false")
+        ),
         sa.UniqueConstraint("course_id", "index", name="uq_lessons_course_idx"),
     )
 
     op.create_table(
         "messages",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("channel_id", sa.Integer(), sa.ForeignKey("channels.id", ondelete="CASCADE")),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE")),
+        sa.Column(
+            "channel_id", sa.Integer(), sa.ForeignKey("channels.id", ondelete="CASCADE")
+        ),
+        sa.Column(
+            "user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE")
+        ),
         sa.Column("parent_id", sa.Integer(), sa.ForeignKey("messages.id")),
         sa.Column("text", sa.Text(), nullable=False),
         sa.Column("attachments", sa.JSON(), server_default=sa.text("'[]'")),
-        sa.Column("pinned", sa.Boolean(), nullable=False, server_default=sa.text("false")),
+        sa.Column(
+            "pinned", sa.Boolean(), nullable=False, server_default=sa.text("false")
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True)),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
     )
 
     op.create_table(
         "progress",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("lesson_id", sa.Integer(), sa.ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False),
-        sa.Column("status", progress_status, nullable=False, server_default="in_progress"),
+        sa.Column(
+            "user_id",
+            sa.Integer(),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "lesson_id",
+            sa.Integer(),
+            sa.ForeignKey("lessons.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column(
+            "status", progress_status, nullable=False, server_default="in_progress"
+        ),
         sa.Column("percent", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
         sa.UniqueConstraint("user_id", "lesson_id", name="uq_progress_user_lesson"),
     )
 
@@ -121,7 +179,12 @@ def upgrade() -> None:
         sa.Column("entity", sa.String(length=128), nullable=False),
         sa.Column("entity_id", sa.String(length=128), nullable=False),
         sa.Column("meta", sa.JSON(), nullable=False, server_default=sa.text("'{}'")),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
     )
 
 

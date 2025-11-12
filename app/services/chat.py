@@ -31,13 +31,17 @@ class ChatService:
     async def _get_channel(self, slug: str) -> Channel:
         channel = await self.session.scalar(select(Channel).where(Channel.slug == slug))
         if not channel:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Channel not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Channel not found"
+            )
         return channel
 
     async def get_channel(self, slug: str) -> Channel:
         return await self._get_channel(slug)
 
-    async def fetch_recent(self, channel: Channel, limit: int = 50) -> list[dict[str, Any]]:
+    async def fetch_recent(
+        self, channel: Channel, limit: int = 50
+    ) -> list[dict[str, Any]]:
         result = await self.session.execute(
             select(Message)
             .where(Message.channel_id == channel.id)
@@ -56,15 +60,21 @@ class ChatService:
             "text": message.text,
             "attachments": message.attachments or [],
             "pinned": message.pinned,
-            "deleted_at": message.deleted_at.isoformat() if message.deleted_at else None,
+            "deleted_at": message.deleted_at.isoformat()
+            if message.deleted_at
+            else None,
             "created_at": message.created_at.isoformat(),
         }
 
-    async def create_message(self, slug: str, user: User, payload: ChatMessagePayload) -> dict[str, Any]:
+    async def create_message(
+        self, slug: str, user: User, payload: ChatMessagePayload
+    ) -> dict[str, Any]:
         await self._enforce_rate_limit(user)
         channel = await self._get_channel(slug)
         if channel.is_readonly and user.role not in (UserRole.admin,):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Channel is read-only")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Channel is read-only"
+            )
         message = Message(
             channel_id=channel.id,
             user_id=user.id,
@@ -79,35 +89,53 @@ class ChatService:
         await self.broadcast(slug, "message.created", data)
         return data
 
-    async def delete_message(self, slug: str, message_id: int, user: User) -> dict[str, Any]:
+    async def delete_message(
+        self, slug: str, message_id: int, user: User
+    ) -> dict[str, Any]:
         message = await self.session.scalar(
-            select(Message).where(Message.id == message_id).options(joinedload(Message.channel))
+            select(Message)
+            .where(Message.id == message_id)
+            .options(joinedload(Message.channel))
         )
         if not message or message.channel.slug != slug:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Message not found"
+            )
         if message.user_id != user.id and user.role != UserRole.admin:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed"
+            )
         message.deleted_at = datetime.now(UTC)
         await self.session.commit()
         payload = {"id": message.id}
         await self.broadcast(slug, "message.deleted", payload)
         return payload
 
-    async def pin_message(self, slug: str, message_id: int, user: User) -> dict[str, Any]:
+    async def pin_message(
+        self, slug: str, message_id: int, user: User
+    ) -> dict[str, Any]:
         if user.role != UserRole.admin:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Requires admin")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Requires admin"
+            )
         message = await self.session.scalar(
-            select(Message).where(Message.id == message_id).options(joinedload(Message.channel))
+            select(Message)
+            .where(Message.id == message_id)
+            .options(joinedload(Message.channel))
         )
         if not message or message.channel.slug != slug:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Message not found"
+            )
         message.pinned = True
         await self.session.commit()
         payload = self.serialize_message(message)
         await self.broadcast(slug, "message.pinned", payload)
         return payload
 
-    async def broadcast(self, slug: str, event_type: str, payload: dict[str, Any]) -> None:
+    async def broadcast(
+        self, slug: str, event_type: str, payload: dict[str, Any]
+    ) -> None:
         message = json.dumps({"type": event_type, "payload": payload})
         await self.redis.publish(self._channel_key(slug), message)
 
@@ -125,7 +153,10 @@ class ChatService:
         if count == 1:
             await self.redis.expire(key, 60)
         if count > settings.rate_limit_chat_per_minute:
-            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Chat rate limit exceeded")
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Chat rate limit exceeded",
+            )
 
 
 async def ensure_default_channels(session: AsyncSession) -> None:

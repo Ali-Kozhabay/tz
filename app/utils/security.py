@@ -29,7 +29,9 @@ class TokenPayload(TypedDict, total=False):
     extra: dict[str, Any]
 
 
-def _create_token(subject: str, ttl_seconds: int, token_type: str, **claims: Any) -> str:
+def _create_token(
+    subject: str, ttl_seconds: int, token_type: str, **claims: Any
+) -> str:
     now = datetime.now(UTC)
     payload: TokenPayload = {
         "sub": subject,

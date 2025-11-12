@@ -61,7 +61,7 @@ class PaginatedCourses(BaseModel):
 class ProgressMarkRequest(BaseModel):
     lesson_id: int
     status: LessonStatus = LessonStatus.in_progress
-    percent: conint(ge=0, le=100) = 0
+    percent: int = Field(ge=0, le=100)
 
 
 class ProgressMarkResponse(BaseModel):

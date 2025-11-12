@@ -26,7 +26,11 @@ class InviteService:
 
     async def create(self, actor: User, payload: InviteCreateRequest) -> Invite:
         code = secrets.token_urlsafe(8)
-        invite = Invite(code=code, role_to_grant=payload.role_to_grant, expires_at=payload.expires_at)
+        invite = Invite(
+            code=code,
+            role_to_grant=payload.role_to_grant,
+            expires_at=payload.expires_at,
+        )
         self.session.add(invite)
         await self.session.flush()
         self.session.add(
@@ -45,11 +49,17 @@ class InviteService:
     async def redeem(self, code: str, user: User) -> Invite:
         invite = await self.session.scalar(select(Invite).where(Invite.code == code))
         if not invite:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Invite not found"
+            )
         if invite.expires_at < datetime.now(UTC):
-            raise HTTPException(status_code=status.HTTP_410_GONE, detail="Invite expired")
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE, detail="Invite expired"
+            )
         if invite.used_by_id:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Invite already used")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Invite already used"
+            )
 
         if _role_rank(invite.role_to_grant) > _role_rank(user.role):
             user.role = invite.role_to_grant
