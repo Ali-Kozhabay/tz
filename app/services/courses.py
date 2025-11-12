@@ -67,6 +67,11 @@ class CourseService:
         return course
 
     async def create_course(self, payload: CourseCreate) -> Course:
+        existing_course = await self.get_course(payload.course.slug, payload.role)
+        if existing_course:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,detail="Course already exists"
+            )
         course = Course(**payload.model_dump())
         self.session.add(course)
         await self.session.commit()
